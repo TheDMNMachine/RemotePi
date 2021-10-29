@@ -1,7 +1,7 @@
 import serial
 import time
 
-async def  read_from_sensor(value_code):
+def read_from_sensor(value_code: str) -> float:
     com = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
     value_code = bytes((value_code + '\n'), 'UTF-8')
     com.write(value_code)
@@ -13,7 +13,12 @@ async def  read_from_sensor(value_code):
         response = com.read(com.inWaiting())
         com.close()
     raw = response.decode('utf-8')
-    return float(raw.split(' ')[0])
+    try:
+        return float(raw.split(' ')[0])
+    except ValueError:
+        print("Controller fail")
+        pass
+
 
 if __name__ == "__main__":
     while True:
