@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from rpi_control import turn_off_led, turn_on_led
-from pico_control import read_from_sensor
+from pico_control import ValueCodeForSensor, Pico
 import asyncio
 
 
@@ -73,6 +73,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
+TEMPERATURE = ValueCodeForSensor.temperature.value
+HUMIDITY = ValueCodeForSensor.humidity.value
+PRESSURE = ValueCodeForSensor.pressure.value
+
 
 @app.get("/status", tags=['status'])
 async def status():
@@ -97,27 +101,31 @@ def turn_off():
 
 @app.get("/temperature", tags=['temperature'])
 def get_temperature():
-    temp :float = read_from_sensor('0')
+    pico = Pico()
+    temp :float = pico.read_from_sensor(TEMPERATURE)
     return {'temperature': temp}
 
 
 @app.get("/humidity", tags=['humidity'])
 def get_humidity():
-    humidity :float = read_from_sensor('2')
+    pico = Pico()
+    humidity :float = pico.read_from_sensor(HUMIDITY)
     return {'humidity': humidity}
 
 
 @app.get("/pressure", tags=['pressure'])
 def get_pressure():
-    pressure : float = read_from_sensor('1')
+    pico = Pico()
+    pressure : float = pico.read_from_sensor(PRESSURE)
     return {'pressure': pressure}
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    pico = Pico()
     await websocket.accept()
     while True:
         await asyncio.sleep(10)
-        temp = read_from_sensor('0')
+        temp = pico.read_from_sensor(TEMPERATURE)
         await websocket.send_text(f"Temperature is : {temp}")
 
